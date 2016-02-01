@@ -1,8 +1,9 @@
 #ifndef CoAPServer_h
 #define CoAPServer_h
-#include <LoraShield.h>
+#include "LoraShield.h"
 #include <SPI.h>
-#include <CoAP.h>
+#include "CoAP.h"
+#include "cbor.h"
 
 //DEEP_DEBUG Shows characters sent and received
 //DUMP_COAP  Shows received COAP messages
@@ -34,7 +35,7 @@ class CoAPResource {
  public:
   CoAPResource() { name = "";  next = NULL; };
   CoAPResource(String n, t_answer_get fg, t_answer_put fp, uint8_t t) 
-    {name = n; function_get = fg; function_put = fp; type =t; next = NULL; };
+    {name = n; function_get = fg;  function_put = fp; type =t; next = NULL; };
 
   CoAPResource*  add(String, t_answer_get, t_answer_put, uint8_t);
   CoAPResource* find(String, uint8_t); 
@@ -83,26 +84,34 @@ class CoAPServer {
 public:
   CoAPServer ();
   void begin(LoraShield, String); 
-  int  incoming();
+  int  incoming();  //process data in server mode
+  
+  uint8_t  getResult(CoAPToken*); // wait for an answer matching the token
+  
   byte readByte();
   uint8_t  processRequest();
   uint32_t getValue (uint8_t);
 
   CoAPResource*  addRes(String s, t_answer_get fg) 
-            { return resList->add (s, fg, NULL, CR_READ); } 
+  { return resList->add (s, fg, NULL, CR_READ); } 
+
   CoAPResource*  addRes(String s, t_answer_put fp)
             { return resList->add (s, NULL, fp, CR_WRITE); } 
   CoAPResource*  addRes(String s, t_answer_get fg, t_answer_put fp) 
             { return resList->add (s, fg, fp, CR_READ|CR_WRITE); } 
-
+ 
   void     setHeader (uint8_t, uint8_t, uint16_t, CoAPToken*);
   void     addOption (uint8_t, uint8_t, byte*);
+  void     addOption (uint8_t T, char* S) { addOption(T, strlen(S), (byte*) S);}; 
   void     addOption (uint8_t t) { addOption(t, 0, (byte*) 0); }
   void     addOption (uint8_t T, uint32_t V); // Optimize option Length
   void     addValue (CoAPResource*, uint8_t);
+  void     addValue (char*, uint8_t); 
+  void     addValue (String, uint8_t); 
   void     endMessage();
 
 #ifdef DUMP_COAP
+  void displayMime (int);
   void listRes() {resList->list(); }
 #endif
 

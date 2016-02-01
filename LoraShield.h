@@ -7,7 +7,7 @@
   #include <WProgram.h>
 #endif
 
-#include "coap.h"
+//#include "coap.h"
 
 // Arduino commands
 #define ARDUINO_CMD_AVAILABLE 0x00

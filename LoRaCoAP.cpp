@@ -1,4 +1,4 @@
-#include <LoRaCoAP.h>
+#include "LoRaCoAP.h"
 
 #ifdef DUMP_COAP
 char *TypeMsg[] = { "CON", "NON", "ACK", "RST" };
@@ -182,6 +182,14 @@ uint8_t CoAPServer::processRequest ()
 	      Serial.println (URIPath);
 #endif
 	      break;
+	    case COAP_OPTION_CONTENT:
+	      format = getValue (length);
+#ifdef DUMP_COAP
+	      Serial.print ("Content-Format ");
+	      displayMime (format);
+#endif
+	      break;
+
 
 	    default:		// flush option
 #ifdef DUMP_COAP
@@ -300,6 +308,10 @@ int CoAPServer::incoming()
   if (lora.dataAvailable()) {
     processRequest();
     }
+}
+
+uint8_t CoAPServer::getResult(CoAPToken* tk)
+{
 }
 
 byte CoAPServer::readByte()
@@ -463,6 +475,22 @@ CoAPServer::addValue (CoAPResource* res, uint8_t format)
 }
 
 void
+CoAPServer::addValue (char* txt, uint8_t format)
+{
+
+  int lgt = strlen("txt");
+  for (int k =0; k < lgt; k++) outgoingBuf[idxOB++] = txt[k];
+}
+
+void
+CoAPServer::addValue (String s, uint8_t format)
+{
+
+  int lgt = s.length();
+  for (int k =0; k < lgt; k++) outgoingBuf[idxOB++] = s[k];
+}
+
+void
 CoAPServer::endMessage ()
 {
 #ifdef DEEP_DEBUG
@@ -493,9 +521,10 @@ CoAPResource::add (String newName, t_answer_get fg, t_answer_put fp, uint8_t typ
 	}
       NE = NE->next;
     }
-  NE->next = new CoAPResource (newName, fg, fp, type);
+  NE->next = new CoAPResource (newName, (t_answer_get) fg, fp, type);
   return NE->next;
 }
+
 
 #ifdef DUMP_COAP
 void
@@ -528,6 +557,41 @@ CoAPResource::find (String targetName, uint8_t type)
   return NULL;
 }
 
+#ifdef DUMP_COAP
+void
+CoAPServer::displayMime (int m)
+{
+  Serial.print ("(");
+  Serial.print (m);
+  Serial.print (") ");
+  switch (m)
+    {
+    case 0:
+      Serial.print ("text/plain; charset=utf-8");
+      break;
+    case 40:
+      Serial.print ("Application/link-format");
+      break;
+    case 41:
+      Serial.print ("Application/xml");
+      break;
+    case 42:
+      Serial.print ("Application/octet-stream");
+      break;
+    case 47:
+      Serial.print ("Application/exi");
+      break;
+    case 50:
+      Serial.print ("Application/json");
+      break;
+    case 60:
+      Serial.print ("Application/cbor");
+      break;
+    default:
+      Serial.print ("Unknown");
+    }
+}
+#endif
 //==
 
 void
