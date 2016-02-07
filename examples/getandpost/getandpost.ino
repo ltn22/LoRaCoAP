@@ -29,7 +29,7 @@ void setup()
   Serial.begin(9600);
   while (!Serial); // wait for serial port to connect. Needed for Leonardo only
 
-  CS.begin(lora, "dzeta.t.eu.org"); 
+  CS.begin(lora, "sensor.example.com"); 
   
    resLum = CS.addRes(String("/lum"), answer_get);
    resMsg = CS.addRes(String("/msg"), answer_msg);
